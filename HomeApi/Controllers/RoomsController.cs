@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 using AutoMapper;
+using HomeApi.Configuration;
+using HomeApi.Contracts.Models.Home;
 using HomeApi.Contracts.Models.Rooms;
 using HomeApi.Data.Models;
 using HomeApi.Data.Repos;
@@ -17,20 +19,20 @@ namespace HomeApi.Controllers
     {
         private IRoomRepository _repository;
         private IMapper _mapper;
-        
+
         public RoomsController(IRoomRepository repository, IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;
         }
-        
+
         //TODO: Задание - добавить метод на получение всех существующих комнат
-        
+
         /// <summary>
         /// Добавление комнаты
         /// </summary>
-        [HttpPost] 
-        [Route("")] 
+        [HttpPost]
+        [Route("")]
         public async Task<IActionResult> Add([FromBody] AddRoomRequest request)
         {
             var existingRoom = await _repository.GetRoomByName(request.Name);
@@ -40,7 +42,7 @@ namespace HomeApi.Controllers
                 await _repository.AddRoom(newRoom);
                 return StatusCode(201, $"Комната {request.Name} добавлена!");
             }
-            
+
             return StatusCode(409, $"Ошибка: Комната {request.Name} уже существует.");
         }
         /// <summary>
@@ -67,12 +69,21 @@ namespace HomeApi.Controllers
                 Voltage = request.NewVoltage
             };
             await _repository.UpdateRoom(roomWithEdit);
-            return StatusCode(200, $"Комната с id: {id} успешно обновлена " +
-                $"{Environment.NewLine} Новые значения комнаты:" +
-                $"{Environment.NewLine} Площадь = {roomWithEdit.Area}" +
-                $"{Environment.NewLine} Есть газ? = {roomWithEdit.GasConnected}" +
-                $"{Environment.NewLine} Название = {roomWithEdit.Name}" +
-                $"{Environment.NewLine} Напряжение = {roomWithEdit.Voltage}");
+
+            var response = new EditRoomResponse
+            {
+                Name = roomWithEdit.Name,
+                Area = roomWithEdit.Area,
+                GasConnected = roomWithEdit.GasConnected,
+                Voltage = roomWithEdit.Voltage,
+                Message = $"Комната с id: {id} успешно обновлена"
+
+            };
+
+            return new JsonResult(response) { StatusCode = 200 };
         }
+
+       
+
     }
 }
